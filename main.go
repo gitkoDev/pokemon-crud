@@ -47,6 +47,18 @@ func getAllPokemon(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(allPokemon)
 }
 
+func getPokemon(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+
+	for _, p := range allPokemon {
+		if p.Name == params["name"] {
+			json.NewEncoder(w).Encode(p)
+		} else {
+			w.Write([]byte("no such pokemon found"))
+		}
+	}
+}
+
 func main() {
 	addPokemon("Treecko", []PokemonType{Grass})
 	addPokemon("Lairon", []PokemonType{Steel, Iron})
@@ -54,7 +66,8 @@ func main() {
 	r := mux.NewRouter()
 
 	r.Handle("/", http.FileServer(http.Dir("./static")))
-	r.HandleFunc("/allPokemon", getAllPokemon).Methods("GET")
+	r.HandleFunc("/getPokemon", getAllPokemon).Methods("GET")
+	r.HandleFunc("/getPokemon/{name}", getPokemon).Methods("GET")
 
 	port := getEnv("PORT")
 	fmt.Println("running server on port", port)
