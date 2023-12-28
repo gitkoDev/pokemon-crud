@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 
+	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
 
@@ -34,14 +36,29 @@ const (
 	Dark     = "dark"
 	Steel    = "steel"
 	Fairy    = "fairy"
+	Iron     = "iron"
 )
 
+var allPokemon = []Pokemon{}
+
+func getAllPokemon(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(allPokemon)
+}
+
 func main() {
+	addPokemon("Treecko", []PokemonType{Grass})
+	addPokemon("Lairon", []PokemonType{Steel, Iron})
+
+	r := mux.NewRouter()
+
+	r.Handle("/", http.FileServer(http.Dir("./static")))
+	r.HandleFunc("/allPokemon", getAllPokemon).Methods("GET")
+
 	port := getEnv("PORT")
-
 	fmt.Println("running server on port", port)
-
-	http.ListenAndServe(":"+port, nil)
+	http.ListenAndServe(":"+port, r)
 }
 
 func getEnv(v string) string {
@@ -57,4 +74,9 @@ func getEnv(v string) string {
 		}
 		return os.Getenv(v)
 	}
+}
+
+func addPokemon(name string, types []PokemonType) {
+	pokemon := Pokemon{Name: name, Type: types}
+	allPokemon = append(allPokemon, pokemon)
 }
