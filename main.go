@@ -48,15 +48,32 @@ func getAllPokemon(w http.ResponseWriter, r *http.Request) {
 }
 
 func getPokemon(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
 
 	for _, p := range allPokemon {
 		if p.Name == params["name"] {
 			json.NewEncoder(w).Encode(p)
-		} else {
-			w.Write([]byte("no such pokemon found"))
 		}
 	}
+}
+
+func deletePokemon(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+
+	for index, p := range allPokemon {
+		if p.Name == params["name"] {
+			allPokemon = append(allPokemon[:index], allPokemon[index+1:]...)
+			fmt.Fprintln(w, "Found")
+			break
+		} else {
+			w.Write([]byte("no such pokemon found"))
+			return
+		}
+	}
+
+	json.NewEncoder(w).Encode(allPokemon)
 }
 
 func main() {
@@ -68,6 +85,7 @@ func main() {
 	r.Handle("/", http.FileServer(http.Dir("./static")))
 	r.HandleFunc("/getPokemon", getAllPokemon).Methods("GET")
 	r.HandleFunc("/getPokemon/{name}", getPokemon).Methods("GET")
+	r.HandleFunc("/deletePokemon/{name}", deletePokemon).Methods("DELETE")
 
 	port := getEnv("PORT")
 	fmt.Println("running server on port", port)
