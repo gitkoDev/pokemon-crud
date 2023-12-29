@@ -41,6 +41,8 @@ const (
 
 var allPokemon = []Pokemon{}
 
+// Request functions
+
 func getAllPokemon(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -56,6 +58,15 @@ func getPokemon(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(p)
 		}
 	}
+}
+
+// func updatePokemon(w http.ResponseWriter, r *http.Request) {
+// 	w.Header()
+// }
+
+func addPokemon(name string, types []PokemonType) {
+	pokemon := Pokemon{Name: name, Type: types}
+	allPokemon = append(allPokemon, pokemon)
 }
 
 func deletePokemon(w http.ResponseWriter, r *http.Request) {
@@ -105,9 +116,4 @@ func getEnv(v string) string {
 		}
 		return os.Getenv(v)
 	}
-}
-
-func addPokemon(name string, types []PokemonType) {
-	pokemon := Pokemon{Name: name, Type: types}
-	allPokemon = append(allPokemon, pokemon)
 }
