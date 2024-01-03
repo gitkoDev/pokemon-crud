@@ -42,7 +42,30 @@ const (
 
 var allPokemon = []Pokemon{}
 
+func populatePokemon(name string, types []PokemonType) {
+	pokemon := Pokemon{Name: name, Type: types}
+	allPokemon = append(allPokemon, pokemon)
+}
+
 // Request functions
+
+// Create
+
+func addPokemon(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var pokemon Pokemon
+	err := json.NewDecoder(r.Body).Decode(&pokemon)
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	allPokemon = append(allPokemon, pokemon)
+
+	json.NewEncoder(w).Encode(allPokemon)
+}
+
+// Read
 
 func getAllPokemon(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -61,24 +84,35 @@ func getPokemon(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func populatePokemon(name string, types []PokemonType) {
-	pokemon := Pokemon{Name: name, Type: types}
-	allPokemon = append(allPokemon, pokemon)
-}
+// Update
 
-func addPokemon(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+func updatePokemon(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "applicaion/json")
+
+	params := mux.Vars(r)
+
+	name := params["name"]
 
 	var pokemon Pokemon
+
+	for index, pokemon := range allPokemon {
+		if pokemon.Name == name {
+			allPokemon = append(allPokemon[:index], allPokemon[index+1:]...)
+		}
+	}
+
 	err := json.NewDecoder(r.Body).Decode(&pokemon)
+
 	if err != nil {
-		log.Panicln(err)
+		log.Println(err)
 	}
 
 	allPokemon = append(allPokemon, pokemon)
 
 	json.NewEncoder(w).Encode(allPokemon)
 }
+
+// Delete
 
 func deletePokemon(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -108,6 +142,7 @@ func main() {
 	r.HandleFunc("/addPokemon", addPokemon).Methods("POST")
 	r.HandleFunc("/getPokemon", getAllPokemon).Methods("GET")
 	r.HandleFunc("/getPokemon/{name}", getPokemon).Methods("GET")
+	r.HandleFunc("/updatePokemon/{name}", updatePokemon).Methods("PUT")
 	r.HandleFunc("/deletePokemon/{name}", deletePokemon).Methods("DELETE")
 
 	port := getEnv("PORT")
