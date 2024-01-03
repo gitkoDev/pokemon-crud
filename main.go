@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -60,13 +61,23 @@ func getPokemon(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// func updatePokemon(w http.ResponseWriter, r *http.Request) {
-// 	w.Header()
-// }
-
-func addPokemon(name string, types []PokemonType) {
+func populatePokemon(name string, types []PokemonType) {
 	pokemon := Pokemon{Name: name, Type: types}
 	allPokemon = append(allPokemon, pokemon)
+}
+
+func addPokemon(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var pokemon Pokemon
+	err := json.NewDecoder(r.Body).Decode(&pokemon)
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	allPokemon = append(allPokemon, pokemon)
+
+	json.NewEncoder(w).Encode(allPokemon)
 }
 
 func deletePokemon(w http.ResponseWriter, r *http.Request) {
@@ -88,12 +99,13 @@ func deletePokemon(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	addPokemon("Treecko", []PokemonType{Grass})
-	addPokemon("Lairon", []PokemonType{Steel, Iron})
+	populatePokemon("Treecko", []PokemonType{Grass})
+	populatePokemon("Lairon", []PokemonType{Steel, Iron})
 
 	r := mux.NewRouter()
 
 	r.Handle("/", http.FileServer(http.Dir("./static")))
+	r.HandleFunc("/addPokemon", addPokemon).Methods("POST")
 	r.HandleFunc("/getPokemon", getAllPokemon).Methods("GET")
 	r.HandleFunc("/getPokemon/{name}", getPokemon).Methods("GET")
 	r.HandleFunc("/deletePokemon/{name}", deletePokemon).Methods("DELETE")
